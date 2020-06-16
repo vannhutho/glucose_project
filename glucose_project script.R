@@ -16,6 +16,9 @@ if(!require(tidyr)) install.packages("tidyr")
 if(!require(stringr)) install.packages("stringr")
 if(!require(forcats)) install.packages("forcats")
 if(!require(ggplot2)) install.packages("ggplot2")
+if(!require(timeDate)) install.packages("timeDate")
+if(!require(corrplot)) install.packages("corrplot")
+
 
                              
 # All libraraies needed
@@ -27,6 +30,8 @@ library(tidyr)
 library(stringr)
 library(forcats)
 library(ggplot2)
+library(timeDate)
+library(corrplot)
 
 \newpage
 
@@ -58,16 +63,6 @@ str(glucose)
 - waist "integer" = unique identification value per patient in cm
 - age_cat "factor" = age groups 20-39/40-59/60+ years
 
-class(glucose$id)
-class(glucose$chol)
-class(glucose$glyhb)
-class(glucose$location)
-class(glucose$age)
-class(glucose$height)
-class(glucose$weight)
-class(glucose$waist)
-class(glucose$age_cat)
-
 
 "str(glucose$location)
 locations <- c("Buckingham", "Louisa")
@@ -78,9 +73,86 @@ as.character(locations.factor)"
 #checking for missing variables
 sapply(glucose, function(x) sum(is.na(x)))
 
-#looking closer attributes and data values
-summary(glucose)
+#looking closer attributes and data values for:
+#glyhb
+summary(glucose$glyhb)
+skewness(glucose$glyhb)
+kurtosis(glucose$glyhb)
+#Histogram
+dfglyhb <- data.frame(glucose$glyhb)
+ggplot(dfglyhb, aes(x = glucose$glyhb), binwidth = 2) + 
+  geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5) + 
+  geom_density(colour = 'blue') + xlab(expression(bold('Glycemia'))) + 
+  ylab(expression(bold('Density')))
+#Boxplot
+boxplot(glucose$glyhb)
+
+
+#weight
+summary(glucose$weight)
+skewness(glucose$weight)
+kurtosis(glucose$weight)
+#Histogram
+dfweight <- data.frame(glucose$weight)
+ggplot(dfweight, aes(x = glucose$weight), binwidth = 2) + 
+  geom_histogram(aes(y = ..density..), fill = 'blue', alpha = 0.5) + 
+  geom_density(colour = 'blue') + xlab(expression(bold('weight'))) + 
+  ylab(expression(bold('Density')))
+
+#age
+summary(glucose$age)
+skewness(glucose$age)
+kurtosis(glucose$age)
+#Histogram
+dfage <- data.frame(glucose$age)
+ggplot(dfage, aes(x = glucose$age), binwidth = 2) + 
+  geom_histogram(aes(y = ..density..), fill = 'green', alpha = 0.5) + 
+  geom_density(colour = 'blue') + xlab(expression(bold('age'))) + 
+  ylab(expression(bold('Density')))
+
+
+#chol
+summary(glucose$chol)
+skewness(glucose$chol)
+kurtosis(glucose$chol)
+#Histogram
+dfchol <- data.frame(glucose$chol)
+ggplot(dfchol, aes(x = glucose$chol), binwidth = 2) + 
+  geom_histogram(aes(y = ..density..), fill = 'black', alpha = 0.5) + 
+  geom_density(colour = 'blue') + xlab(expression(bold('age'))) + 
+  ylab(expression(bold('Density')))
+#Boxplot
+boxplot(glucose$chol)
 
 
 
+#Bivariate/Multivariate Analysis
+#Correlation Plot
+#We are now interested in how the 10 predictors relate to each other. 
+#To see bivariate relationships among these predictors, we calculate correlations between them.
 
+# calculate collinearity
+glucose1 <- glucose[ ,c("chol","glyhb","age", "height", "weight", "waist")]
+glucose1
+corrglucose <- cor(glucose1[,2:6])
+corrplot(corrglucose, order = "hclust", tl.cex = 0.7)
+
+cor(glucose$age, glucose$glyhb, method = c("pearson", "kendall", "spearman"))
+cor(glucose$weight, glucose$waist, method = c("pearson", "kendall", "spearman"))
+cor(glucose$height, glucose$glyhb, method = c("pearson", "kendall", "spearman"))
+
+
+# Simple Scatterplot
+attach(glucose$age)
+plot(wt, mpg, main="Scatterplot Example",
+     xlab="Car Weight ", ylab="Miles Per Gallon ", pch=19)
+#Scatter plot
+set.seed(1705)
+n <- 284
+d <- data.frame(a = rnorm(n))
+d$b <- .4 * (d$a + rnorm(n))
+
+ggplot(d, aes(glucose$glyhb, glucose$weight, color = pc)) +
+  geom_point(shape = 16, size = 5, show.legend = FALSE) +
+  theme_minimal() +
+  scale_color_gradient(low = "#0091ff", high = "#f0650e")
