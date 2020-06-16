@@ -1,10 +1,18 @@
+---
+title: "Glucose project"
+author: "Van Nhut Ho"
+date: "16/06/2020"
+output: word_document
+---
 
+**GLYCEMIA PROJECT**
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 
 ###################
 #CAPSTONE PROJECT 2
 ###################
-#GLYCEMIA PROJECT
-
 
 # Note: this process could take a couple of minutes
 if(!require(foreign)) install.packages("foreign")
@@ -27,10 +35,17 @@ library(tidyr)
 library(stringr)
 library(forcats)
 library(ggplot2)
+```
+
+**Loading raw Data set**
+```{r, include=FALSE, echo=FALSE}
+glucose <- read.csv("C:/Users/vnh/Desktop/glc.csv")
+```
 
 \newpage
 
-#1 EXECUTIVE SUMMARY
+
+**EXECUTIVE SUMMARY**
 The aim of this project is to show if the age and the weight influence on the glycemia (glucose). 
 The Glycemia refers to the concentration of sugar or glucose in the blood. 
 In many of the European countries blood glucose or sugar is also measured as millimol per decilitre (mmol/dl). 
@@ -38,15 +53,20 @@ These measurements are referred to as the SI units.
 If the blood glucose level above 6.1 mmol/l or 1.10 g/l (hyperglycemia and less than 3.5 mmol/l or 0.54 g/l (hypoglycemia)
 When fasting blood glucose is above 7 mmol/l (1.26 g/l), the diagnosis of diabetes is made. 
 
-#2 METHODS AND ANALYSIS
-#Loading raw Data set
-glucose <- read.csv("C:/Users/vnh/Desktop/glc.csv")
 
-#Getting descriptive statistics
+**2 METHODS AND ANALYSIS**
+**2.1 Data Analysis**
+**2.1.1 Dataset exploration**
+In this section, I'll present the methods and the analysis of the data. Before continuing the process, it's really important to discover the variables (names, types, counts, lenght etc.)
+
+**Getting descriptive statistics**
+This dataset contains 10 variables and 284 observations.
+
+```{r, echo=FALSE, include=TRUE}
 str(glucose)
-#> This dataset contains 10 variables and 284 observations.
+```
 
-#Type of variable :
+**Type of variable :**
 - id "integer" = unique identification value per patient
 - chol "integer" = unique identification value of cholesterol per patient
 - glyhb "numeric" = unique identification value of glycemia per patient
@@ -58,29 +78,18 @@ str(glucose)
 - waist "integer" = unique identification value per patient in cm
 - age_cat "factor" = age groups 20-39/40-59/60+ years
 
-class(glucose$id)
-class(glucose$chol)
-class(glucose$glyhb)
-class(glucose$location)
-class(glucose$age)
-class(glucose$height)
-class(glucose$weight)
-class(glucose$waist)
-class(glucose$age_cat)
 
+**checking for missing variables**
+This data set has no missing vaule.
 
-"str(glucose$location)
-locations <- c("Buckingham", "Louisa")
-locations.factor <- factor(locations)
-locations.factor
-as.character(locations.factor)"
-
-#checking for missing variables
+```{r, echo=FALSE, include=TRUE}
 sapply(glucose, function(x) sum(is.na(x)))
+```
 
-#looking closer attributes and data values
+**looking closer attributes and data values**
+For all variables (except id, location, gender, age_cat because of nonsens), the mean and the median are close. We can see a large range for the variable chol and weight,.
+
+```{r, echo=FALSE, include=TRUE}
 summary(glucose)
-
-
-
+```
 
