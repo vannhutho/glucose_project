@@ -16,16 +16,18 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Note: this process could take a couple of minutes
 if(!require(foreign)) install.packages("foreign")
-if(!require(tidyverse)) install.packages("tidyverse", repos = "http://cran.us.r-project.org")
-if(!require(caret)) install.packages("caret", repos = "http://cran.us.r-project.org")
-if(!require(data.table)) install.packages("data.table", repos = "http://cran.us.r-project.org")
+if(!require(tidyverse)) install.packages("tidyverse")
+if(!require(caret)) install.packages("caret")
+if(!require(data.table)) install.packages("data.table")
 if(!require(kableExtra)) install.packages("kableExtra")
 if(!require(tidyr)) install.packages("tidyr")
 if(!require(stringr)) install.packages("stringr")
 if(!require(forcats)) install.packages("forcats")
 if(!require(ggplot2)) install.packages("ggplot2")
+if(!require(timeDate)) install.packages("timeDate")
+if(!require(corrplot)) install.packages("corrplot")
 
-                             
+
 # All libraraies needed
 library(foreign)
 library(dplyr)
@@ -35,6 +37,8 @@ library(tidyr)
 library(stringr)
 library(forcats)
 library(ggplot2)
+library(timeDate)
+library(corrplot)
 ```
 
 **Loading raw Data set**
@@ -45,7 +49,7 @@ glucose <- read.csv("C:/Users/vnh/Desktop/glc.csv")
 \newpage
 
 
-**EXECUTIVE SUMMARY**
+**1 EXECUTIVE SUMMARY**
 The aim of this project is to show if the age and the weight influence on the glycemia (glucose). 
 The Glycemia refers to the concentration of sugar or glucose in the blood. 
 In many of the European countries blood glucose or sugar is also measured as millimol per decilitre (mmol/dl). 
@@ -87,9 +91,159 @@ sapply(glucose, function(x) sum(is.na(x)))
 ```
 
 **looking closer attributes and data values**
-For all variables (except id, location, gender, age_cat because of nonsens), the mean and the median are close. We can see a large range for the variable chol and weight,.
+For all variables (except id, location, gender, age_cat because of nonsens), the mean and the median are close (= "egalitarian" distribution). We can see a large range for the variable chol and weight,.
 
 ```{r, echo=FALSE, include=TRUE}
 summary(glucose)
 ```
+
+**2.1.2 Univariate Plots Section**
+One of the main goals of visualizing the data here is to observe which features are most helpful in predicting of type of glycemia (hyper-hypo glycemia)
+Now w look closer the attributes and data values for:
+**glyhb**
+Mean-Median are close ("egalitarian" distribution)
+Mean = 4.68
+Median = 4.66
+Skewness = 0.22 : asymmetry slightly to the right (-1 and +1) (+=to the right and 0=symmetry) coefficient of dyssimetry
+Kurtosis = -0.3 : flat curve, symmetry relative concentration of observations because < 0 ,flattening coefficient <0=platycurtic; >0=leptocurtic distribution therefore sharper curve=lower flattening
+Shape of the curve = Skewness+Kurtosis
+Conclusion: almost symmetric
+
+```{r, echo=FALSE, include=TRUE}
+summary(glucose$glyhb)
+skewness(glucose$glyhb)
+kurtosis(glucose$glyhb)
+```
+Histogram
+```{r, echo=FALSE, include=TRUE}
+dfglyhb <- data.frame(glucose$glyhb)
+ggplot(dfglyhb, aes(x = glucose$glyhb), binwidth = 2) + 
+  geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5) + 
+  geom_density(colour = 'blue') + xlab(expression(bold('Glycemia'))) + 
+  ylab(expression(bold('Density')))
+```
+
+Boxplot
+Outlier : none
+```{r, echo=FALSE, include=TRUE}
+boxplot(glucose$glyhb)
+```
+
+
+**weight**
+```{r, echo=FALSE, include=TRUE}
+summary(glucose$weight)
+skewness(glucose$weight)
+kurtosis(glucose$weight)
+```
+
+Mean-Median are close ("egalitarian" distribution)
+Mean = 77.47
+Median = 77.01
+Skewness = 0.32 : asymmetry slightly to the right (-1 and +1) (+=to the right and 0=symmetry) coefficient of dyssimetry
+Kurtosis = -0.29 : flat curve, symmetry relative concentration of observations because < 0 ,flattening coefficient <0=platycurtic; >0=leptocurtic distribution therefore sharper curve=lower flattening
+Shape of the curve = Skewness+Kurtosis
+Conclusion: almost symmetric
+
+Histogram
+```{r, echo=FALSE, include=TRUE}
+dfweight <- data.frame(glucose$weight)
+ggplot(dfweight, aes(x = glucose$weight), binwidth = 2) + 
+  geom_histogram(aes(y = ..density..), fill = 'blue', alpha = 0.5) + 
+  geom_density(colour = 'blue') + xlab(expression(bold('Weight'))) + 
+  ylab(expression(bold('Density')))
+```
+Boxplot
+Outlier : none
+```{r, echo=FALSE, include=TRUE}
+boxplot(glucose$weight)
+```
+
+**age**
+```{r, echo=FALSE, include=TRUE}
+summary(glucose$age)
+skewness(glucose$age)
+kurtosis(glucose$age)
+```
+
+Mean-Median are close ("egalitarian" distribution)
+Mean = 41
+Median = 43.82
+Skewness = 0.38 : asymmetry slightly to the right (-1 and +1) (+=to the right and 0=symmetry) coefficient of dyssimetry
+Kurtosis = -0.71 : flat curve, symmetry relative concentration of observations because < 0 ,flattening coefficient <0=platycurtic; >0=leptocurtic distribution therefore sharper curve=lower flattening
+Shape of the curve = Skewness+Kurtosis
+Conclusion: almost symmetric
+
+Histogram
+```{r, echo=FALSE, include=TRUE}
+dfage <- data.frame(glucose$age)
+ggplot(dfage, aes(x = glucose$age), binwidth = 2) + 
+  geom_histogram(aes(y = ..density..), fill = 'green', alpha = 0.5) + 
+  geom_density(colour = 'blue') + xlab(expression(bold('age'))) + 
+  ylab(expression(bold('Density')))
+```
+  
+Boxplot
+Outlier : none
+```{r, echo=FALSE, include=TRUE}
+boxplot(glucose$age)
+```
+
+**chol**
+
+```{r, echo=FALSE, include=TRUE}
+summary(glucose$chol)
+skewness(glucose$chol)
+kurtosis(glucose$chol)
+```
+Mean-Median are close ("egalitarian" distribution)
+Mean = 199.0
+Median = 200.5
+Skewness = 0.23 : asymmetry slightly to the right (-1 and +1) (+=to the right and 0=symmetry) coefficient of dyssimetry
+Kurtosis = 0.07 : weak flat curve, symmetry relative concentration of observations because = 0 ,flattening coefficient <0=platycurtic; >0=leptocurtic distribution therefore sharper curve=lower flattening
+Shape of the curve = Skewness+Kurtosis
+Conclusion: almost symmetric
+
+Histogram
+```{r, echo=FALSE, include=TRUE}
+dfchol <- data.frame(glucose$chol)
+ggplot(dfchol, aes(x = glucose$chol), binwidth = 2) + 
+  geom_histogram(aes(y = ..density..), fill = 'black', alpha = 0.5) + 
+  geom_density(colour = 'blue') + xlab(expression(bold('age'))) + 
+  ylab(expression(bold('Density')))
+```
+
+Boxplot
+Outlier : none
+```{r, echo=FALSE, include=TRUE}
+boxplot(glucose$chol)
+```
+
+
+**2.1.3 Bivariate/Multivariate Analysis**
+Correlation Plot with numeric variables:
+We are now interested in how the 6 predictors relate to each other. 
+To see bivariate relationships among these predictors, we calculate correlations between them. Correlations tell us:
+ - whether this relationship is positive or negative
+ - the strength of the relationship.
+
+Value of r	                Strength of relationship
+-1.0 to -0.5 or 1.0 to 0.5	Strong
+-0.5 to -0.3 or 0.3 to 0.5	Moderate
+-0.3 to -0.1 or 0.1 to 0.3	Weak
+-0.1 to 0.1	None or very weak
+
+**Calculate collinearity**
+Fellow this corrplot, the variable weight has a hight bivariate relationships with the variable waist, but weak correlation with glyhb. Note there is "no" relation between glyhb and height.
+
+```{r, echo=FALSE, include=TRUE}
+glucose1 <- glucose[ ,c("chol","glyhb","age", "height", "weight", "waist")]
+glucose1
+corrglucose <- cor(glucose1[,2:6])
+corrplot(corrglucose, order = "hclust", tl.cex = 0.7)
+```
+
+
+
+
 
