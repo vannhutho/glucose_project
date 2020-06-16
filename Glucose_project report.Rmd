@@ -129,7 +129,6 @@ Outlier : none
 boxplot(glucose$glyhb)
 ```
 
-
 **weight**
 ```{r, echo=FALSE, include=TRUE}
 summary(glucose$weight)
@@ -243,6 +242,33 @@ corrglucose <- cor(glucose1[,2:6])
 corrplot(corrglucose, order = "hclust", tl.cex = 0.7)
 ```
 
+**Linear regression**
+Scatter plots can help visualize any linear relationships between the dependent (response) variable and independent (predictor) variables.
+
+Linear regression between glyemia and weight:
+Following this scatter plot, there is a horizontal linear relationships between these variables.
+
+```{r, echo=FALSE, include=TRUE}
+glycemia <- glucose$glyhb
+weight <- glucose$weight
+scatter.smooth(x=glycemia, y=weight, main="glycemia ~ kg")  # scatterplot
+```
+
+Linear regression between glyemia and choesterol:
+As we can see, there is a horizontal linear regression.
+```{r, echo=FALSE, include=TRUE}
+glycemia <- glucose$glyhb
+cholesterol <- glucose$chol
+scatter.smooth(x=glycemia, y=cholesterol, main="glycemia ~ mmol/dl")  # scatterplot
+```
+
+Linear regression between glyemia and age:
+Here we see a slight positive linear regression.
+```{r, echo=FALSE, include=TRUE}
+glycemia <- glucose$glyhb
+age <- glucose$age
+scatter.smooth(x=glycemia, y=age, main="glycemia ~ age")  # scatterplot
+```
 
 
 

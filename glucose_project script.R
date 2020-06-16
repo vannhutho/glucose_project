@@ -142,17 +142,20 @@ cor(glucose$weight, glucose$waist, method = c("pearson", "kendall", "spearman"))
 cor(glucose$height, glucose$glyhb, method = c("pearson", "kendall", "spearman"))
 
 
-# Simple Scatterplot
-attach(glucose$age)
-plot(wt, mpg, main="Scatterplot Example",
-     xlab="Car Weight ", ylab="Miles Per Gallon ", pch=19)
-#Scatter plot
-set.seed(1705)
-n <- 284
-d <- data.frame(a = rnorm(n))
-d$b <- .4 * (d$a + rnorm(n))
+# Linear regression
+glycemia <- glucose$glyhb
+weight <- glucose$weight
+scatter.smooth(x=glycemia, y=weight, main="glycemia ~ kg")  # scatterplot
 
-ggplot(d, aes(glucose$glyhb, glucose$weight, color = pc)) +
-  geom_point(shape = 16, size = 5, show.legend = FALSE) +
-  theme_minimal() +
-  scale_color_gradient(low = "#0091ff", high = "#f0650e")
+glycemia <- glucose$glyhb
+cholesterol <- glucose$chol
+scatter.smooth(x=glycemia, y=cholesterol, main="glycemia ~ mmol/dl")  # scatterplot
+
+glycemia <- glucose$glyhb
+age <- glucose$age
+scatter.smooth(x=glycemia, y=age, main="glycemia ~ age")  # scatterplot
+
+
+#Data process
+
+
