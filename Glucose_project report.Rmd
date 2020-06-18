@@ -343,8 +343,6 @@ ggplot(pca_df, aes(x=PC1, y=PC2, col=glucose$glyhb)) + geom_point(alpha=0.5)
 ```
 
 
-**RESULTS**
-
 **3.2 Machine learning**
  Machine learning algorithms build a mathematical model based on sample data (training data), in order to make predictions or decisions making without being explicitly programmed to do so.
 **Split data into train and test sets**
