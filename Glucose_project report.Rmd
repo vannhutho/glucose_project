@@ -26,7 +26,7 @@ if(!require(forcats)) install.packages("forcats")
 if(!require(ggplot2)) install.packages("ggplot2")
 if(!require(timeDate)) install.packages("timeDate")
 if(!require(corrplot)) install.packages("corrplot")
-
+if(!require(mlr)) install.packages("mlr")
 
 # All libraraies needed
 library(foreign)
@@ -39,6 +39,7 @@ library(forcats)
 library(ggplot2)
 library(timeDate)
 library(corrplot)
+library(mlr)
 ```
 
 **Loading raw Data set**
@@ -54,7 +55,7 @@ The aim of this project is to show if the age and the weight influence on the gl
 The Glycemia refers to the concentration of sugar or glucose in the blood. 
 In many of the European countries blood glucose or sugar is also measured as millimol per decilitre (mmol/dl). 
 These measurements are referred to as the SI units.
-If the blood glucose level above 6.1 mmol/l or 1.10 g/l (hyperglycemia and less than 3.5 mmol/l or 0.54 g/l (hypoglycemia)
+If the blood glucose level above 6.1 mmol/l or 1.10 g/l (hyperglycemia) and less than 3.5 mmol/l or 0.54 g/l (hypoglycemia)
 When fasting blood glucose is above 7 mmol/l (1.26 g/l), the diagnosis of diabetes is made. 
 
 
@@ -98,8 +99,8 @@ summary(glucose)
 ```
 
 **2.1.2 Univariate Plots Section**
-One of the main goals of visualizing the data here is to observe which features are most helpful in predicting of type of glycemia (hyper-hypo glycemia)
-Now w look closer the attributes and data values for:
+One of the main goals of visualizing the data here is to observe which features are most helpful in predicting of type of glycemia (hyper-hypo glycemia).
+Now we look closer the attributes and data values for:
 **glyhb**
 Mean-Median are close ("egalitarian" distribution)
 Mean = 4.68
@@ -213,7 +214,8 @@ ggplot(dfchol, aes(x = glucose$chol), binwidth = 2) +
 ```
 
 Boxplot
-Outlier : none
+Outlier : 1
+Intlier : 1
 ```{r, echo=FALSE, include=TRUE}
 boxplot(glucose$chol)
 ```
@@ -226,14 +228,14 @@ To see bivariate relationships among these predictors, we calculate correlations
  - whether this relationship is positive or negative
  - the strength of the relationship.
 
-Value of r	                Strength of relationship
+Value of r:	                Strength of relationship:
 -1.0 to -0.5 or 1.0 to 0.5	Strong
 -0.5 to -0.3 or 0.3 to 0.5	Moderate
 -0.3 to -0.1 or 0.1 to 0.3	Weak
--0.1 to 0.1	None or very weak
+-0.1 to 0.1	                None or very weak
 
 **Calculate collinearity**
-Fellow this corrplot, the variable weight has a hight bivariate relationships with the variable waist, but weak correlation with glyhb. Note there is "no" relation between glyhb and height.
+Fellowing this corrplot, the variable glyhb has a bivariate relationships with the variable age, weight and waist. Note there is "no" relation between glyhb and height.
 
 ```{r, echo=FALSE, include=TRUE}
 glucose1 <- glucose[ ,c("chol","glyhb","age", "height", "weight", "waist")]
@@ -243,10 +245,14 @@ corrplot(corrglucose, order = "hclust", tl.cex = 0.7)
 ```
 
 **Linear regression**
-Scatter plots can help visualize any linear relationships between the dependent (response) variable and independent (predictor) variables.
+Now let's have a quantitative score throught a scatter plots and calculation that can help visualize any linear relationships between the dependent (response) variable and independent (predictor) variables.
 
-Linear regression between glyemia and weight:
-Following this scatter plot, there is a horizontal linear relationships between these variables.
+Linear regression between glycemia and weight:
+Following this score and the scatter plot, there is a weak positive linear relationships between these variables.
+
+```{r, echo=FALSE, include=TRUE}
+cor(glucose$glyhb, glucose$weight, method = c("pearson", "kendall", "spearman"))
+```
 
 ```{r, echo=FALSE, include=TRUE}
 glycemia <- glucose$glyhb
@@ -254,8 +260,13 @@ weight <- glucose$weight
 scatter.smooth(x=glycemia, y=weight, main="glycemia ~ kg")  # scatterplot
 ```
 
-Linear regression between glyemia and choesterol:
-As we can see, there is a horizontal linear regression.
+Linear regression between glycemia and cholesterol:
+As we can see, there is a weak positive linear regression.
+
+```{r, echo=FALSE, include=TRUE}
+cor(glucose$glyhb, glucose$chol, method = c("pearson", "kendall", "spearman"))
+```
+
 ```{r, echo=FALSE, include=TRUE}
 glycemia <- glucose$glyhb
 cholesterol <- glucose$chol
@@ -263,7 +274,12 @@ scatter.smooth(x=glycemia, y=cholesterol, main="glycemia ~ mmol/dl")  # scatterp
 ```
 
 Linear regression between glyemia and age:
-Here we see a slight positive linear regression.
+Here we see a slight positive correlation between these variables.
+
+```{r, echo=FALSE, include=TRUE}
+cor(glucose$glyhb, glucose$age, method = c("pearson", "kendall", "spearman"))
+```
+
 ```{r, echo=FALSE, include=TRUE}
 glycemia <- glucose$glyhb
 age <- glucose$age
@@ -271,5 +287,277 @@ scatter.smooth(x=glycemia, y=age, main="glycemia ~ age")  # scatterplot
 ```
 
 
+Linear regression between glyemia and wast:
+The score and the scatter plot show us a slight positive correlation between these variables.
 
+```{r, echo=FALSE, include=TRUE}
+cor(glucose$glyhb, glucose$waist, method = c("pearson", "kendall", "spearman"))
+```
+
+```{r, echo=FALSE, include=TRUE}
+glycemia <- glucose$glyhb
+scatter.smooth(x=glycemia, y=age, main="glycemia ~ waist")  # scatterplot
+```
+
+
+\newpage
+**3 RESULTS***
+
+**3.1 Principal Components Analysis (PCA) transform**
+Principal component analysis is a statistical technique that is used to analyze the interrelationships among a large number of variables and to explain these variables in terms of a smaller number of variables (called principal components) with a minimum loss of information.
+It constructs a set of orthogonal (non-collinear, uncorrelated, independent) variables and is used for making predictive models
+
+This plot show us the increase of components(variables) the decrease of variances:
+```{r, echo=FALSE, include=TRUE}
+glucose.pca <- prcomp(glucose1, center=TRUE, scale=TRUE)
+plot(glucose.pca, type="l", main='')
+grid(nx = 6, ny = 5)
+title(main = "Principal components weight", sub = NULL, xlab = "Components")
+box()
+```
+
+```{r, echo=FALSE, include=TRUE}
+summary(glucose.pca)
+```
+Following these results, the standard deviation of variables are low and indicate that the values tend to be close to the mean (also called the expected value) of the set.
+
+
+**Proportion of variance explained**
+To explain more than 0.95 of the variance, it's required 5 principal components and 5 for 0.99.
+
+```{r, echo=FALSE, include=TRUE}
+pca_var <- glucose.pca$sdev^2
+pve_df <- pca_var / sum(pca_var)
+cum_pve <- cumsum(pve_df)
+pve_table <- tibble(comp = seq(1:ncol(glucose1)), pve_df, cum_pve)
+
+ggplot(pve_table, aes(x = comp, y = cum_pve)) + 
+  geom_point() + 
+  geom_abline(intercept = 0.95, color = "red", slope = 0)
+```
+
+The features with highest dimmensions or aligned with the leading principal component are the ones with highest variance.
+```{r, echo=FALSE, include=TRUE}
+pca_df <- as.data.frame(glucose.pca$x)
+ggplot(pca_df, aes(x=PC1, y=PC2, col=glucose$glyhb)) + geom_point(alpha=0.5)
+```
+
+
+**RESULTS**
+
+**3.2 Machine learning**
+ Machine learning algorithms build a mathematical model based on sample data (training data), in order to make predictions or decisions making without being explicitly programmed to do so.
+**Split data into train and test sets**
+The division of the dataset into two parts makes it possible to check the performance of the learning machine. I will Split the available data into a train set (65%) and a test set (35).
+
+train_set = 187 rows
+test_set = 97 rows
+
+```{r, echo=FALSE, include=TRUE}
+set.seed(2)
+test_index <- createDataPartition(y = glucose$glyhb, p = 0.65, list = FALSE)
+train_set <- glucose[test_index,]
+test_set <- glucose[-test_index,]
+
+nrow(train_set)
+nrow(test_set)
+```
+
+
+**Overview train_set and test_set**
+
+```{r, echo=FALSE, include=TRUE}
+head(train_set) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                position = "center",
+                font_size = 10,
+                full_width = FALSE)
+```
+
+```{r, echo=FALSE, include=TRUE}
+head(test_set) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                position = "center",
+                font_size = 10,
+                full_width = FALSE)
+```
+
+**3.2.1 Naive Bayes**
+In machine learning, naïve Bayes classifiers are a family of simple "probabilistic classifiers" based on applying Bayes' theorem with strong independence assumptions between the features
+
+Average of all glycemia
+```{r, echo=FALSE, include=TRUE}
+mu_hat <- mean(glucose$glyhb)
+mu_hat
+```
+
+Predict the RMSE on the validation set
+```{r, echo=FALSE, include=TRUE}
+rmse_mean_model_result <- RMSE(test_set$glyhb, mu_hat)
+```
+
+Finally a dataframe of result
+```{r, echo=FALSE, include=TRUE}
+results <- data.frame(model="Naive Mean-Baseline Model", RMSE=rmse_mean_model_result)
+results %>% 
+   kable() %>%
+   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+             position = "center",
+             font_size = 12,
+             full_width = FALSE)
+```
+
+**3.2.2 Model building on training data to predict the glycemia on test data**
+From the model summary, the model p value and predictor’s p value are less than the significance level = statistically significant model. 
+
+**Calculate Akaike Information Criterion (AIC)**
+The AIC is essentially an estimated measure of the quality of each of the available econometric models as they relate to one another for a certain set of data, making it an ideal method for model selection.
+
+AIC between glyhb and weight:
+```{r, echo=FALSE, include=TRUE}
+lmMod <- lm(glyhb ~ weight, data=glucose)  # build the model
+glyPred <- predict(lmMod, test_set)  # predict glycemia
+summary (lmMod)  # model summary
+```
+
+```{r, echo=FALSE, include=TRUE}
+lmMod2 <- lm(glyhb ~ age, data=glucose)  # build the model
+glyPred2 <- predict(lmMod2, test_set)  # predict glycemia
+summary (lmMod2)  # model summary
+```
+
+```{r, echo=FALSE, include=TRUE}
+AIC(lmMod, lmMod2)
+```
+
+**Calculate Bayesian Information Criterion (BIC)**
+The BIC is a variant of AIC with a stronger penalty for including additional variables to the model.
+BIC between glyhb and weight:
+
+```{r, echo=FALSE, include=TRUE}
+BIC(lmMod, lmMod2)
+```
+AIC and BIC are small meaning that the econometric models is powerful.
+
+**Average prediction error rate**
+Dividing the RSE by the average value of the outcome variable will give us the prediction error rate, which should be as small as possible:
+```{r, echo=FALSE, include=TRUE}
+sigma(lmMod)/mean(glucose$glyhb)
+```
+The average prediction error rate is 12.7%.
+
+
+**Calculate prediction accuracy and error rates**
+A simple correlation between the actuals and predicted values can be used as a form of accuracy measure. 
+A higher correlation accuracy implies that the actuals and predicted values have similar directional movement, i.e. when the actuals values increase the predicteds also increase and vice-versa.
+```{r, echo=FALSE, include=TRUE}
+actuals_preds <- data.frame(cbind(actuals=test_set$glyhb, predicteds=glyPred))  # make actuals_predicteds dataframe.
+correlation_accuracy <- cor(actuals_preds)
+head(actuals_preds)
+```
+
+**min_max_accuracy**
+The result of min max accuracy is hight:
+```{r, echo=FALSE, include=TRUE}
+min_max_accuracy <- mean(apply(actuals_preds, 1, min) / apply(actuals_preds, 1, max))  
+min_max_accuracy
+```
+
+**mean absolute percentage deviation**
+The mean absolute percentage deviation is low:
+```{r, echo=FALSE, include=TRUE}
+map <- mean(abs((actuals_preds$predicteds - actuals_preds$actuals))/actuals_preds$actuals)
+map
+```
+
+
+**3.2.3 Cross-validation methods**
+
+**The Validation set Approach**
+When comparing two models, the one that produces the lowest test sample RMSE is the preferred model.
+Making predictions and computing the R2, RMSE and MAE:
+
+```{r, echo=FALSE, include=TRUE}
+model <- lm(glyhb ~., data = train_set)
+RMSE_K_FOLD_CROSS_VALIDATION <- RMSE(predictions, test_set$glyhb)
+predictions <- model %>% predict(test_set)
+data.frame( R2 = R2(predictions, test_set$glyhb),
+            RMSE = RMSE(predictions, test_set$glyhb),
+            MAE = MAE(predictions, test_set$glyhb))
+results <- results %>% add_row(model="K-fold cross-validation", RMSE=RMSE_K_FOLD_CROSS_VALIDATION)
+```
+The RMSE and the MAE are measured in the same scale as the outcome variable. Dividing the RMSE by the average value of the outcome variable will give us the prediction error rate, which should be as small as possible:
+
+```{r, echo=FALSE, include=TRUE}  
+RMSE(predictions, test_set$glyhb)/mean(test_set$glyhb)
+```
+Note that, the validation set method is only useful when you have a large data set that can be partitioned. 
+Therefore, the test error rate can be highly variable, depending on which observations are included in the training set and which observations are included in the validation set.
+
+**K-fold cross-validation**
+The k-fold cross-validation method evaluates the model performance on different subset of the training data and then calculate the average prediction error rate. The algorithm is as follow:
+- Randomly split the data set into k-subsets (or k-fold) (for example 5 or 10 subsets)
+- Reserve one subset and train the model on all other subsets
+- Test the model on the reserved subset and record the prediction error
+- Repeat this process until each of the k subsets has served as the test set.
+- Compute the average of the k recorded errors (cross-validation error) serving as the   performance metric for the model.
+- K-fold cross-validation (CV) is a robust method for estimating the accuracy of a model.
+
+Define training control and train the model
+```{r, echo=FALSE, include=TRUE}
+set.seed(200, sample.kind="Rounding")
+train.control <- trainControl(method = "cv", number = 10)
+model <- train(glyhb ~., data = glucose, method = "lm",
+               trControl = train.control)
+```
+
+Summarize the results
+```{r, echo=FALSE, include=TRUE}
+print(model)
+```
+
+**Repeated K-fold cross-validation**
+The process of splitting the data into k-folds could be repeatedas many times as wished and called repeated k-fold cross validation.
+The final model error is taken as the mean error from the number of repeats.
+
+This following example uses 10-fold cross validation with 4 repeats:
+Define training control and model
+```{r, echo=FALSE, include=TRUE}
+set.seed(200)
+train.control2 <- trainControl(method = "repeatedcv", 
+                              number = 10, repeats = 3)
+model2 <- train(glyhb ~., data = glucose, method = "lm",
+               trControl = train.control2)
+```
+
+Summarize the results
+```{r, echo=FALSE, include=TRUE}
+print(model2)
+```
+
+**Summarize RMSE table**
+This table shows the RMSE results of models builted and trained. As we can see, applying K-fold cross-validation model reduce the RMSE score.
+
+```{r, echo=FALSE, include=TRUE}  
+results %>% 
+   kable() %>%
+   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+             position = "center",
+             font_size = 12,
+             full_width = FALSE)
+```
+
+
+\newpage
+**Conclusion**
+- The glycemia has a slight positive correlation with waist (0.17) and with age (0.30).
+- The performant model metrics are powerfull (low AIC,BIC).
+- The Naive Mean-Baseline Model	has 0.58427 RMSE (prediction errors) score.
+- The K-fold Cross-Validation has a lower 0.56856 RMSE score.
+
+```{r, echo=FALSE, include=TRUE}
+sessionInfo()
+```
 

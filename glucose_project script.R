@@ -18,8 +18,8 @@ if(!require(forcats)) install.packages("forcats")
 if(!require(ggplot2)) install.packages("ggplot2")
 if(!require(timeDate)) install.packages("timeDate")
 if(!require(corrplot)) install.packages("corrplot")
-
-
+if(!require(mlr)) install.packages("mlr")
+if(!require(caret)) install.packages("caret")
                              
 # All libraraies needed
 library(foreign)
@@ -32,6 +32,8 @@ library(forcats)
 library(ggplot2)
 library(timeDate)
 library(corrplot)
+library(mlr)
+library(caret)
 
 \newpage
 
@@ -63,12 +65,6 @@ str(glucose)
 - waist "integer" = unique identification value per patient in cm
 - age_cat "factor" = age groups 20-39/40-59/60+ years
 
-
-"str(glucose$location)
-locations <- c("Buckingham", "Louisa")
-locations.factor <- factor(locations)
-locations.factor
-as.character(locations.factor)"
 
 #checking for missing variables
 sapply(glucose, function(x) sum(is.na(x)))
@@ -137,25 +133,170 @@ glucose1
 corrglucose <- cor(glucose1[,2:6])
 corrplot(corrglucose, order = "hclust", tl.cex = 0.7)
 
-cor(glucose$age, glucose$glyhb, method = c("pearson", "kendall", "spearman"))
-cor(glucose$weight, glucose$waist, method = c("pearson", "kendall", "spearman"))
-cor(glucose$height, glucose$glyhb, method = c("pearson", "kendall", "spearman"))
-
-
 # Linear regression
+cor(glucose$glyhb, glucose$weight, method = c("pearson", "kendall", "spearman"))
 glycemia <- glucose$glyhb
 weight <- glucose$weight
 scatter.smooth(x=glycemia, y=weight, main="glycemia ~ kg")  # scatterplot
 
+cor(glucose$glyhb, glucose$chol, method = c("pearson", "kendall", "spearman"))
 glycemia <- glucose$glyhb
 cholesterol <- glucose$chol
 scatter.smooth(x=glycemia, y=cholesterol, main="glycemia ~ mmol/dl")  # scatterplot
 
+cor(glucose$glyhb, glucose$age, method = c("pearson", "kendall", "spearman"))
 glycemia <- glucose$glyhb
 age <- glucose$age
 scatter.smooth(x=glycemia, y=age, main="glycemia ~ age")  # scatterplot
 
+cor(glucose$glyhb, glucose$waist, method = c("pearson", "kendall", "spearman"))
+glycemia <- glucose$glyhb
+scatter.smooth(x=glycemia, y=age, main="glycemia ~ waist")  # scatterplot
 
-#Data process
+#Data processing
 
+#Principal Components Analysis (PCA) transform
+Principal component analysis is a statistical technique that is used to analyze the interrelationships among a large number of variables and to explain these variables in terms of a smaller number of variables, called principal components, with a minimum loss of information.
+It constructs a set of orthogonal (non-collinear, uncorrelated, independent) variables and is used for making predictive models
+glucose.pca <- prcomp(glucose1, center=TRUE, scale=TRUE)
+plot(glucose.pca, type="l", main='')
+grid(nx = 6, ny = 5)
+title(main = "Principal components weight", sub = NULL, xlab = "Components")
+box()
+
+summary(glucose.pca)
+
+
+#Calculate the proportion of variance explained
+pca_var <- glucose.pca$sdev^2
+pve_df <- pca_var / sum(pca_var)
+cum_pve <- cumsum(pve_df)
+pve_table <- tibble(comp = seq(1:ncol(glucose1)), pve_df, cum_pve)
+
+ggplot(pve_table, aes(x = comp, y = cum_pve)) + 
+  geom_point() + 
+  geom_abline(intercept = 0.95, color = "red", slope = 0)
+
+pca_df <- as.data.frame(glucose.pca$x)
+ggplot(pca_df, aes(x=PC1, y=PC2, col=glucose$glyhb)) + geom_point(alpha=0.5)
+
+
+#Split data set in train 65% and test 35%
+set.seed(2, sample.kind="Rounding")
+test_index <- createDataPartition(y = glucose$glyhb, p = 0.65, list = FALSE)
+train_set <- glucose[test_index,]
+test_set <- glucose[-test_index,]
+
+nrow(train_set)
+nrow(test_set)
+
+#Overview edx and validation dataset
+
+head(train_set) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                position = "center",
+                font_size = 10,
+                full_width = FALSE)
+
+head(test_set) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                position = "center",
+                font_size = 10,
+                full_width = FALSE)
+
+#Naive Bayes
+#Average of all glycemia
+mu_hat <- mean(glucose$glyhb)
+mu_hat
+
+#Predict the RMSE on the validation set
+rmse_mean_model_result <- RMSE(test_set$glyhb, mu_hat)
+rmse_mean_model_result
+
+#Finally a dataframe of result
+results <- data.frame(model="Naive Mean-Baseline Model", RMSE=rmse_mean_model_result)
+results
+
+results %>% 
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                position = "center",
+                font_size = 12,
+                full_width = FALSE)
+
+
+lmMod <- lm(glyhb ~ weight, data=glucose)  # build the model
+glyPred <- predict(lmMod, test_set)  # predict glycemia
+summary (lmMod)  # model summary
+
+lmMod2 <- lm(glyhb ~ age, data=glucose)  # build the model
+glyPred2 <- predict(lmMod2, test_set)  # predict glycemia
+summary (lmMod2)  # model summary
+
+AIC(lmMod, lmMod2)
+BIC(lmMod, lmMod2)
+sigma(lmMod)/mean(glucose$glyhb) #Average prediction error rate
+
+
+#Machine Learning
+#Develop the model on the training data and use it to predict the distance on test data
+lmMod <- lm(glyhb ~ weight, data=glucose)  # build the model
+glyPred <- predict(lmMod, test_set)  # predict glycemia
+summary (lmMod)  # model summary
+AIC (lmMod)  # Calculate akaike information criterion
+
+#Calculate prediction accuracy and error rates
+actuals_preds <- data.frame(cbind(actuals=test_set$glyhb, predicteds=glyPred))  # make actuals_predicteds dataframe.
+correlation_accuracy <- cor(actuals_preds)
+head(actuals_preds)
+
+min_max_accuracy <- mean(apply(actuals_preds, 1, min) / apply(actuals_preds, 1, max))  
+mape <- mean(abs((actuals_preds$predicteds - actuals_preds$actuals))/actuals_preds$actuals)  
+
+
+
+#Cross-validation methods
+model <- lm(glyhb ~., data = train_set)
+# Make predictions and compute the R2, RMSE and MAE
+predictions <- model %>% predict(test_set)
+data.frame( R2 = R2(predictions, test_set$glyhb),
+            RMSE = RMSE(predictions, test_set$glyhb),
+            MAE = MAE(predictions, test_set$glyhb))
+RMSE_K_FOLD_CROSS_VALIDATION <- RMSE(predictions, test_set$glyhb)
+#When comparing two models, the one that produces the lowest test sample RMSE is the preferred model.
+the RMSE and the MAE are measured in the same scale as the outcome variable. Dividing the RMSE by the average value of the outcome variable will give you the prediction error rate, which should be as small as possible:
+  
+RMSE(predictions, test_set$glyhb)/mean(test_set$glyhb)
+#Note that, the validation set method is only useful when you have a large data set that can be partitioned. 
+#Therefore, the test error rate can be highly variable, depending on which observations are included in the training set and which observations are included in the validation set.
+
+#K-fold cross-validation
+Define training control
+set.seed(200, sample.kind="Rounding")
+train.control <- trainControl(method = "cv", number = 10)
+#Train the model
+model <- train(glyhb ~., data = glucose, method = "lm",
+               trControl = train.control)
+#Summarize the results
+print(model)
+
+#Repeated K-fold cross-validation
+#Define training control
+set.seed(200)
+train.control2 <- trainControl(method = "repeatedcv", 
+                              number = 10, repeats = 3)
+#Train the model
+model2 <- train(glyhb ~., data = glucose, method = "lm",
+               trControl2 = train.control2)
+#Summarize the results
+print(model2)
+
+
+# Adding the results to the results dataset
+results <- results %>% add_row(model="K-fold cross-validation", RMSE=RMSE_K_FOLD_CROSS_VALIDATION)
+results
+
+sessionInfo()
 
