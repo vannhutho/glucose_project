@@ -2,10 +2,18 @@
 title: "Glucose project"
 author: "Van Nhut Ho"
 date: "16/06/2020"
-output: word_document
+output:
+  pdf_document: 
+    fig_caption: yes
+    fig_crop: no
+    fig_height: 3
+    fig_width: 4
+    keep_tex: yes
+    number_sections: yes
+    toc: yes
+  word_document: default
 ---
 
-**GLYCEMIA PROJECT**
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -40,6 +48,10 @@ library(ggplot2)
 library(timeDate)
 library(corrplot)
 library(mlr)
+```
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(error = TRUE)
 ```
 
 **Loading raw Data set**
@@ -153,6 +165,9 @@ ggplot(dfweight, aes(x = glucose$weight), binwidth = 2) +
   geom_density(colour = 'blue') + xlab(expression(bold('Weight'))) + 
   ylab(expression(bold('Density')))
 ```
+
+
+
 Boxplot
 Outlier : none
 ```{r, echo=FALSE, include=TRUE}
@@ -308,13 +323,16 @@ Principal component analysis is a statistical technique that is used to analyze 
 It constructs a set of orthogonal (non-collinear, uncorrelated, independent) variables and is used for making predictive models
 
 This plot show us the increase of components(variables) the decrease of variances:
-```{r, echo=FALSE, include=TRUE}
+
+```{r echo=FALSE}
 glucose.pca <- prcomp(glucose1, center=TRUE, scale=TRUE)
 plot(glucose.pca, type="l", main='')
 grid(nx = 6, ny = 5)
 title(main = "Principal components weight", sub = NULL, xlab = "Components")
 box()
 ```
+
+
 
 ```{r, echo=FALSE, include=TRUE}
 summary(glucose.pca)
@@ -479,8 +497,8 @@ Making predictions and computing the R2, RMSE and MAE:
 
 ```{r, echo=FALSE, include=TRUE}
 model <- lm(glyhb ~., data = train_set)
-RMSE_K_FOLD_CROSS_VALIDATION <- RMSE(predictions, test_set$glyhb)
 predictions <- model %>% predict(test_set)
+RMSE_K_FOLD_CROSS_VALIDATION <- RMSE(predictions, test_set$glyhb)
 data.frame( R2 = R2(predictions, test_set$glyhb),
             RMSE = RMSE(predictions, test_set$glyhb),
             MAE = MAE(predictions, test_set$glyhb))
@@ -505,8 +523,11 @@ The k-fold cross-validation method evaluates the model performance on different 
 
 Define training control and train the model
 ```{r, echo=FALSE, include=TRUE}
-set.seed(200, sample.kind="Rounding")
+set.seed(200)
 train.control <- trainControl(method = "cv", number = 10)
+```
+
+```{r, echo=FALSE, include=TRUE}
 model <- train(glyhb ~., data = glucose, method = "lm",
                trControl = train.control)
 ```
@@ -548,13 +569,14 @@ results %>%
 ```
 
 
-\newpage
+
 **Conclusion**
 - The glycemia has a slight positive correlation with waist (0.17) and with age (0.30).
 - The performant model metrics are powerfull (low AIC,BIC).
-- The Naive Mean-Baseline Model	has 0.58427 RMSE (prediction errors) score.
-- The K-fold Cross-Validation has a lower 0.56856 RMSE score.
+- The Naive Mean-Baseline Model	has a low RMSE (prediction errors) score.
+- The K-fold Cross-Validation has a low RMSE score.
 
+\newpage
 ```{r, echo=FALSE, include=TRUE}
 sessionInfo()
 ```
