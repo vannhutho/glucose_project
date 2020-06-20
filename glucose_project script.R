@@ -91,7 +91,7 @@ kurtosis(glucose$weight)
 #Histogram
 dfweight <- data.frame(glucose$weight)
 ggplot(dfweight, aes(x = glucose$weight), binwidth = 2) + 
-  geom_histogram(aes(y = ..density..), fill = 'blue', alpha = 0.5) + 
+  geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5) + 
   geom_density(colour = 'blue') + xlab(expression(bold('weight'))) + 
   ylab(expression(bold('Density')))
 
@@ -102,7 +102,7 @@ kurtosis(glucose$age)
 #Histogram
 dfage <- data.frame(glucose$age)
 ggplot(dfage, aes(x = glucose$age), binwidth = 2) + 
-  geom_histogram(aes(y = ..density..), fill = 'green', alpha = 0.5) + 
+  geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5) + 
   geom_density(colour = 'blue') + xlab(expression(bold('age'))) + 
   ylab(expression(bold('Density')))
 

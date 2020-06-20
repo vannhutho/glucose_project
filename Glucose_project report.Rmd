@@ -67,14 +67,15 @@ The aim of this project is to show if the age and the weight influence on the gl
 The Glycemia refers to the concentration of sugar or glucose in the blood. 
 In many of the European countries blood glucose or sugar is also measured as millimol per decilitre (mmol/dl). 
 These measurements are referred to as the SI units.
-If the blood glucose level above 6.1 mmol/l or 1.10 g/l (hyperglycemia) and less than 3.5 mmol/l or 0.54 g/l (hypoglycemia)
+If the blood glucose level above 6.1 mmol/l or 1.10 g/l (hyperglycemia) and less than 3.5 mmol/l or 0.54 g/l (hypoglycemia).
 When fasting blood glucose is above 7 mmol/l (1.26 g/l), the diagnosis of diabetes is made. 
 
 
 **2 METHODS AND ANALYSIS**
 **2.1 Data Analysis**
 **2.1.1 Dataset exploration**
-In this section, I'll present the methods and the analysis of the data. Before continuing the process, it's really important to discover the variables (names, types, counts, lenght etc.)
+In this section, I'll present the methods and the analysis of the data. Before continuing the process, 
+it's really important to discover the variables (names, types, counts, lenght etc.)
 
 **Getting descriptive statistics**
 This dataset contains 10 variables and 284 observations.
@@ -161,7 +162,7 @@ Histogram
 ```{r, echo=FALSE, include=TRUE}
 dfweight <- data.frame(glucose$weight)
 ggplot(dfweight, aes(x = glucose$weight), binwidth = 2) + 
-  geom_histogram(aes(y = ..density..), fill = 'blue', alpha = 0.5) + 
+  geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5) + 
   geom_density(colour = 'blue') + xlab(expression(bold('Weight'))) + 
   ylab(expression(bold('Density')))
 ```
@@ -193,7 +194,7 @@ Histogram
 ```{r, echo=FALSE, include=TRUE}
 dfage <- data.frame(glucose$age)
 ggplot(dfage, aes(x = glucose$age), binwidth = 2) + 
-  geom_histogram(aes(y = ..density..), fill = 'green', alpha = 0.5) + 
+  geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5) + 
   geom_density(colour = 'blue') + xlab(expression(bold('age'))) + 
   ylab(expression(bold('Density')))
 ```
@@ -223,7 +224,7 @@ Histogram
 ```{r, echo=FALSE, include=TRUE}
 dfchol <- data.frame(glucose$chol)
 ggplot(dfchol, aes(x = glucose$chol), binwidth = 2) + 
-  geom_histogram(aes(y = ..density..), fill = 'black', alpha = 0.5) + 
+  geom_histogram(aes(y = ..density..), fill = 'red', alpha = 0.5) + 
   geom_density(colour = 'blue') + xlab(expression(bold('age'))) + 
   ylab(expression(bold('Density')))
 ```
@@ -272,7 +273,7 @@ cor(glucose$glyhb, glucose$weight, method = c("pearson", "kendall", "spearman"))
 ```{r, echo=FALSE, include=TRUE}
 glycemia <- glucose$glyhb
 weight <- glucose$weight
-scatter.smooth(x=glycemia, y=weight, main="glycemia ~ kg")  # scatterplot
+scatter.smooth(x=glycemia, y=weight, main="glycemia ~ kg") # scatterplot
 ```
 
 Linear regression between glycemia and cholesterol:
@@ -557,7 +558,8 @@ print(model2)
 ```
 
 **Summarize RMSE table**
-This table shows the RMSE results of models builted and trained. As we can see, applying K-fold cross-validation model reduce the RMSE score.
+This table shows the RMSE results of models builted and trained. As we can see, Naive Mean-Baseline Model has the lowest RMSE score this is due to overtraining.
+Because the first applying K-fold cross-validation model had the lowest RMSE score.
 
 ```{r, echo=FALSE, include=TRUE}  
 results %>% 
