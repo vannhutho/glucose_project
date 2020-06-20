@@ -129,7 +129,6 @@ boxplot(glucose$chol)
 
 # calculate collinearity
 glucose1 <- glucose[ ,c("chol","glyhb","age", "height", "weight", "waist")]
-glucose1
 corrglucose <- cor(glucose1[,2:6])
 corrplot(corrglucose, order = "hclust", tl.cex = 0.7)
 
